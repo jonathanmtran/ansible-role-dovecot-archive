@@ -1,0 +1,41 @@
+---
+- ansible.builtin.group:
+    name: vmail
+    gid: "{{ vmail_gid }}"
+    state: present
+
+- ansible.builtin.user:
+    name: vmail
+    uid: "{{ vmail_uid }}"
+    group: vmail
+    shell: /sbin/nologin
+    system: true
+    home: /var/vmail
+
+- ansible.builtin.apt:
+    pkg:
+      - dovecot-core
+      - dovecot-imapd
+
+- ansible.builtin.copy:
+    src: "etc/dovecot/conf.d/{{ item }}"
+    dest: /etc/dovecot/conf.d
+  loop:
+    - 10-auth.conf
+    - auth-passwdfile.conf.ext
+    - 10-mail.conf
+  notify:
+    - restart dovecot
+
+- ansible.builtin.file:
+    path: /etc/dovecot/users
+    state: file
+  register: dovecot_passwdfile
+  ignore_errors: true
+
+- ansible.builtin.file:
+    path: /etc/dovecot/users
+    state: touch
+  when: dovecot_passwdfile.state == "absent"
+  notify:
+    - restart dovecot
