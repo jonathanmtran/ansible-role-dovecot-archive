@@ -24,6 +24,7 @@
     - 10-auth.conf
     - auth-passwdfile.conf.ext
     - 10-mail.conf
+    - 15-mailboxes.conf
   notify:
     - restart dovecot
 
